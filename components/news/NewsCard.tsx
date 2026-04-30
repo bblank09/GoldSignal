@@ -33,8 +33,17 @@ export default function NewsCard({ item, expanded, onToggle }: Props) {
         <div className="flex items-center gap-[5px] mb-[6px] flex-wrap">
           <ImpactBadge level={analysis.impact_level} score={analysis.impact_score} />
           <SentimentBadge sentiment={analysis.sentiment} />
-          <span className="text-[9px] text-t2 ml-auto font-mono whitespace-nowrap">
-            {item.source} · {formatTimeAgo(item.published_at)}
+          <span className="text-[9px] text-t2 ml-auto font-mono whitespace-nowrap flex items-center gap-[3px]">
+            {item.source}
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-80 transition-opacity"
+              style={{ color: 'var(--t3)' }}
+              onClick={(e) => e.stopPropagation()}
+            >↗</a>
+            · {formatTimeAgo(item.published_at)}
           </span>
         </div>
 

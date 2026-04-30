@@ -91,11 +91,6 @@ async function fetchCategories(): Promise<NewsCategory[]> {
   }
 }
 
-function getActiveTab(pathname: string): 'feed' | 'signals' | 'chart' {
-  if (pathname.startsWith('/signals')) return 'signals'
-  if (pathname.startsWith('/chart')) return 'chart'
-  return 'feed'
-}
 
 export default async function DashboardLayout({
   children,

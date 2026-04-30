@@ -66,10 +66,19 @@ export async function fetchNewsFromRSS(): Promise<Omit<Article, 'id'>[]> {
         for (const item of feed.items.slice(0, 20)) {
           const text = `${item.title ?? ''} ${item.contentSnippet ?? ''}`
           if (!isGoldRelevant(text)) continue
+          // Resolve the best URL — prefer direct article link over GUID
+          const articleUrl =
+            (item.link && item.link.startsWith('http') ? item.link : null) ??
+            (item.guid && item.guid.startsWith('http') ? item.guid : null) ??
+            (item.enclosure?.url ?? null) ??
+            ''
+
+          if (!articleUrl) continue   // skip items with no resolvable URL
+
           results.push({
             title:        item.title ?? 'Untitled',
             source:       src.source,
-            url:          item.link ?? item.guid ?? '',
+            url:          articleUrl,
             published_at: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
             category_id:  detectCategory(text),
             factors:      detectFactors(text),

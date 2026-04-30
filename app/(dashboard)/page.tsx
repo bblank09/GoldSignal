@@ -48,7 +48,7 @@ function LiveWeekTab() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/calendar?days=7')
+    fetch('/api/calendar?days=30')
       .then((r) => r.ok ? r.json() : [])
       .then((events) => {
         if (!events?.length) { setLoading(false); return }
@@ -101,7 +101,7 @@ function LiveWeekTab() {
   if (days.length === 0) {
     return (
       <div className="flex items-center justify-center p-10">
-        <span className="text-[11px] font-mono" style={{ color: 'var(--t3)' }}>No upcoming events. Run calendar-sync cron.</span>
+        <span className="text-[11px] font-mono" style={{ color: 'var(--t3)' }}>No events in next 30 days.</span>
       </div>
     )
   }
@@ -110,16 +110,28 @@ function LiveWeekTab() {
 }
 
 function LiveTaxonomyTab() {
-  const [macro, setMacro] = useState<MacroSnapshot | null>(null)
+  const [macro, setMacro]     = useState<MacroSnapshot | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch('/api/macro')
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d) setMacro(d) })
       .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   const taxonomy: TaxonomyEntry[] = useMemo(() => buildTaxonomy(macro ?? undefined), [macro])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-10">
+        <span className="text-[11px] font-mono" style={{ color: 'var(--t3)' }}>
+          Fetching live macro data…
+        </span>
+      </div>
+    )
+  }
 
   return <TaxonomyList taxonomy={taxonomy} />
 }
