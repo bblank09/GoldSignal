@@ -1,0 +1,28 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/price-tick",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/macro-snapshot",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/fetch-news",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/analyze-news",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/daily-signal",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/calendar-sync",
+      "schedule": "0 0 * * 1"
+    }
+  ]
+}

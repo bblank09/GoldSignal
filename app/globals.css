@@ -2,26 +2,101 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── GoldSignal Design Tokens (matching HTML prototypes exactly) ── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg0: #09090B;
+  --bg1: #0F1014;
+  --bg2: #141720;
+  --bg3: #1A1E2A;
+  --bg4: #20243A;
+  --bdr: #1E2235;
+  --bdr2: #252B3B;
+  --gold: #D4A843;
+  --gold2: #8C7235;
+  --t1: #E8EAF0;
+  --t2: #7B8096;
+  --t3: #3D4255;
+  --bull: #22C55E;
+  --bull2: #15803D;
+  --bullbg: #0D2018;
+  --bear: #EF4444;
+  --bear2: #991B1B;
+  --bearbg: #200D0D;
+  --amb: #F59E0B;
+  --ambbg: #201800;
+  --blue: #3B82F6;
+  --bluebg: #0D1A30;
+  --purple: #A78BFA;
+  /* shadcn compat */
+  --background: 0 0% 4%;
+  --foreground: 220 15% 91%;
+  --card: 228 10% 6%;
+  --card-foreground: 220 15% 91%;
+  --popover: 228 10% 6%;
+  --popover-foreground: 220 15% 91%;
+  --primary: 43 65% 55%;
+  --primary-foreground: 0 0% 5%;
+  --secondary: 225 15% 13%;
+  --secondary-foreground: 220 15% 91%;
+  --muted: 225 15% 13%;
+  --muted-foreground: 230 8% 55%;
+  --accent: 225 15% 13%;
+  --accent-foreground: 220 15% 91%;
+  --destructive: 0 84% 60%;
+  --border: 228 20% 16%;
+  --input: 228 20% 16%;
+  --ring: 43 65% 55%;
+  --radius: 0.25rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Base reset matching HTML prototypes ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg0);
+  font-family: 'Inter', sans-serif;
+  color: var(--t1);
+  font-size: 13px;
+}
+
+.mono {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ── Custom scrollbar matching prototype ── */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: var(--bg1); }
+::-webkit-scrollbar-thumb { background: var(--bdr2); border-radius: 2px; }
+
+/* ── Animations ── */
+@keyframes pulse2 {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .35; }
+}
+@keyframes fi {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.animate-pulse2 { animation: pulse2 2s ease infinite; }
+.animate-fi     { animation: fi .25s ease forwards; }
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-bg0 text-t1; }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  .text-balance { text-wrap: balance; }
 }
