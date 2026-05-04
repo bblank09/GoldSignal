@@ -1,6 +1,7 @@
 'use client'
 
 import type { TimeFrame } from '@/lib/types'
+import { formatNumber } from '@/lib/format'
 
 const TF_OPTIONS: TimeFrame[] = ['15m', '1H', '4H', '1D', '1W']
 
@@ -60,7 +61,7 @@ export default function ChartControls({ tf, onTf, layers, onLayer, currentPrice 
 
       <div className="ml-auto text-[10px] text-t2">
         <span className="text-t3">Last: </span>
-        <span className="font-mono" style={{ color: 'var(--gold)' }}>${currentPrice.toLocaleString()}</span>
+        <span className="font-mono" style={{ color: 'var(--gold)' }}>${formatNumber(currentPrice, 2)}</span>
       </div>
     </div>
   )

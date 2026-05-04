@@ -6,7 +6,8 @@ interface Props { price: GoldPrice }
 
 export default function GoldPriceTicker({ price: initialPrice }: Props) {
   const price = usePriceStream(initialPrice)
-  const rangePct = Math.max(0, Math.min(100, ((price.price - price.day_low) / (price.day_high - price.day_low)) * 100))
+  const span = price.day_high - price.day_low
+  const rangePct = span > 0 ? Math.max(0, Math.min(100, ((price.price - price.day_low) / span) * 100)) : 50
   const isUp = price.change >= 0
 
   return (

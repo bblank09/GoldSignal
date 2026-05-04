@@ -1,6 +1,7 @@
 'use client'
 
 import type { BiasDirection } from '@/lib/types'
+import { formatNumber } from '@/lib/format'
 
 export interface LiveForecast {
   institution: string
@@ -83,7 +84,7 @@ export default function ForecastsTable({ forecasts }: Props) {
                       {row.analyst && <div className="text-[9px] text-t3 mt-[1px]">{row.analyst}</div>}
                     </td>
                     <td className="px-2 py-[7px] border-b border-bdr group-hover:bg-bg2 font-mono text-[12px] font-semibold text-t1">
-                      ${row.target.toLocaleString()}
+                      ${formatNumber(row.target)}
                     </td>
                     <td className="px-2 py-[7px] border-b border-bdr group-hover:bg-bg2 text-[10px] text-t2">
                       {row.timeframe}
@@ -118,7 +119,7 @@ export default function ForecastsTable({ forecasts }: Props) {
       })}
 
       <div className="mt-3 px-2 py-1.5 rounded-[3px] text-[9px] text-t3 leading-[1.5]" style={{ background: 'var(--bg2)', border: '1px solid var(--bdr)' }}>
-        ⚠️ Forecasts are compiled from publicly available institutional research notes and may not reflect the most current views. Always verify with primary sources. Last compiled: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}.
+        ⚠️ Forecasts are compiled from publicly available institutional research notes and may not reflect the most current views. Always verify with primary sources. Last compiled: <span suppressHydrationWarning>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>.
       </div>
     </div>
   )

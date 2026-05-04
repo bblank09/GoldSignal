@@ -6,6 +6,7 @@ import GoldChart from '@/components/chart/GoldChart'
 import ChartControls from '@/components/chart/ChartControls'
 import NewsTimeline from '@/components/chart/NewsTimeline'
 import { usePriceStream } from '@/lib/hooks/use-price-stream'
+import { formatPrice } from '@/lib/format'
 import type { TimeFrame, NewsPin } from '@/lib/types'
 
 const DEFAULT_PRICE = {
@@ -52,7 +53,7 @@ export default function ChartPage() {
                 className="font-mono text-[13px] font-semibold"
                 style={{ color: 'var(--gold)' }}
               >
-                ${price.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${formatPrice(price.price)}
               </span>
               <span
                 className="font-mono text-[10px]"

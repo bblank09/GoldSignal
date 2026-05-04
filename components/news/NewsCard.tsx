@@ -1,7 +1,7 @@
 'use client'
 
 import type { ArticleWithAnalysis } from '@/lib/types'
-import { formatTimeAgo } from '@/lib/format'
+import { formatTimeAgo, formatNumber } from '@/lib/format'
 import ImpactBadge from '@/components/ui/ImpactBadge'
 import SentimentBadge from '@/components/ui/SentimentBadge'
 import FactorTag from '@/components/ui/FactorTag'
@@ -105,17 +105,17 @@ export default function NewsCard({ item, expanded, onToggle }: Props) {
           <div className="grid grid-cols-3 gap-[6px] mt-[6px] mb-[10px]">
             <div className="rounded-[2px] px-2 py-[6px] border" style={{ background: 'var(--bullbg)', borderColor: 'var(--bull2)' }}>
               <div className="text-[8px] font-bold uppercase tracking-[0.1em] mb-1" style={{ color: 'var(--bull)' }}>Bull</div>
-              <div className="font-mono text-[13px] font-semibold" style={{ color: 'var(--bull)' }}>${analysis.bull_case.price.toLocaleString()}</div>
+              <div className="font-mono text-[13px] font-semibold" style={{ color: 'var(--bull)' }}>${formatNumber(analysis.bull_case.price)}</div>
               <div className="text-[10px] text-t2 mt-[3px] leading-[1.4]">{analysis.bull_case.description}</div>
             </div>
             <div className="rounded-[2px] px-2 py-[6px] border border-bdr2" style={{ background: 'var(--bg3)' }}>
               <div className="text-[8px] font-bold uppercase tracking-[0.1em] mb-1 text-t2">Base</div>
-              <div className="font-mono text-[13px] font-semibold text-t1">${analysis.base_case.price.toLocaleString()}</div>
+              <div className="font-mono text-[13px] font-semibold text-t1">${formatNumber(analysis.base_case.price)}</div>
               <div className="text-[10px] text-t2 mt-[3px] leading-[1.4]">{analysis.base_case.description}</div>
             </div>
             <div className="rounded-[2px] px-2 py-[6px] border" style={{ background: 'var(--bearbg)', borderColor: 'var(--bear2)' }}>
               <div className="text-[8px] font-bold uppercase tracking-[0.1em] mb-1" style={{ color: 'var(--bear)' }}>Bear</div>
-              <div className="font-mono text-[13px] font-semibold" style={{ color: 'var(--bear)' }}>${analysis.bear_case.price.toLocaleString()}</div>
+              <div className="font-mono text-[13px] font-semibold" style={{ color: 'var(--bear)' }}>${formatNumber(analysis.bear_case.price)}</div>
               <div className="text-[10px] text-t2 mt-[3px] leading-[1.4]">{analysis.bear_case.description}</div>
             </div>
           </div>
@@ -125,13 +125,13 @@ export default function NewsCard({ item, expanded, onToggle }: Props) {
             <div>
               <div className="text-[8px] uppercase tracking-[0.08em] text-t3 mb-1">Support</div>
               {analysis.key_levels.support.map((lvl) => (
-                <span key={lvl} className="font-mono text-[11px] font-medium text-t1 block py-[2px]">${lvl.toLocaleString()}</span>
+                <span key={lvl} className="font-mono text-[11px] font-medium text-t1 block py-[2px]">${formatNumber(lvl)}</span>
               ))}
             </div>
             <div>
               <div className="text-[8px] uppercase tracking-[0.08em] text-t3 mb-1">Resistance</div>
               {analysis.key_levels.resistance.map((lvl) => (
-                <span key={lvl} className="font-mono text-[11px] font-medium text-t1 block py-[2px]">${lvl.toLocaleString()}</span>
+                <span key={lvl} className="font-mono text-[11px] font-medium text-t1 block py-[2px]">${formatNumber(lvl)}</span>
               ))}
             </div>
           </div>

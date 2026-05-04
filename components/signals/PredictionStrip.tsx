@@ -1,6 +1,7 @@
 'use client'
 
 import type { Prediction, PredictionTF } from '@/lib/types'
+import { formatNumber } from '@/lib/format'
 
 interface Props {
   predictions: Prediction[]
@@ -35,7 +36,7 @@ export default function PredictionStrip({ predictions, selected, onSelect, curre
               {p.tf} · {p.label}
             </div>
             <div className="font-mono text-[14px] font-semibold leading-none mb-[3px]" style={{ color: col }}>
-              ${p.price.toLocaleString()}
+              ${formatNumber(p.price)}
             </div>
             <div className="font-mono text-[10px] mb-1" style={{ color: col }}>
               {chg >= 0 ? '+' : ''}{chg.toFixed(0)} ({p.change_pct >= 0 ? '+' : ''}{p.change_pct.toFixed(1)}%)
@@ -47,7 +48,7 @@ export default function PredictionStrip({ predictions, selected, onSelect, curre
               {isBull ? '▲' : '▼'} {p.bias.toUpperCase()}
             </div>
             <div className="text-[9px] text-t3 font-mono mt-[2px]">
-              B:{p.bull_price.toLocaleString()} / Bs:{p.base_price.toLocaleString()} / Br:{p.bear_price.toLocaleString()}
+              B:{formatNumber(p.bull_price)} / Bs:{formatNumber(p.base_price)} / Br:{formatNumber(p.bear_price)}
             </div>
           </div>
         )

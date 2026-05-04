@@ -1,5 +1,18 @@
+// Use toFixed + manual comma insert instead of toLocaleString to avoid
+// ICU differences between Node.js (Windows minimal ICU) and the browser.
 export function formatPrice(n: number, decimals = 2): string {
-  return n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+  if (!isFinite(n)) return (0).toFixed(decimals)
+  const [int, dec] = n.toFixed(decimals).split('.')
+  const intFormatted = int.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return dec !== undefined ? `${intFormatted}.${dec}` : intFormatted
+}
+
+// Same pattern for arbitrary numbers (used in charts / news cards)
+export function formatNumber(n: number, decimals = 0): string {
+  if (!isFinite(n)) return '0'
+  const [int, dec] = n.toFixed(decimals).split('.')
+  const intFormatted = int.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return dec !== undefined && decimals > 0 ? `${intFormatted}.${dec}` : intFormatted
 }
 
 export function formatPct(n: number, decimals = 2): string {
