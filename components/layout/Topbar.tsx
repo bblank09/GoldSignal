@@ -1,20 +1,26 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import type { GoldPrice } from '@/lib/types'
 import { formatPrice } from '@/lib/format'
 import { usePriceStream } from '@/lib/hooks/use-price-stream'
 
 const IS_MOCK = (process.env.NEXT_PUBLIC_DATA_SOURCE ?? 'mock') !== 'live'
 
-interface Props {
-  price: GoldPrice
-  activeTab: 'feed' | 'signals' | 'chart'
+const DEFAULT_PRICE: GoldPrice = {
+  price: 0, bid: 0, ask: 0, change: 0, change_pct: 0,
+  day_low: 0, day_high: 0, source: 'yahoo', live: false, ts: '',
 }
 
-export default function Topbar({ price: initialPrice, activeTab }: Props) {
-  const price = usePriceStream(initialPrice)
+export default function Topbar() {
+  const price = usePriceStream(DEFAULT_PRICE)
+  const pathname = usePathname()
   const isUp = price.change >= 0
+
+  const activeTab = pathname === '/signals' ? 'signals'
+    : pathname === '/chart' ? 'chart'
+    : 'feed'
 
   return (
     <div
@@ -33,9 +39,9 @@ export default function Topbar({ price: initialPrice, activeTab }: Props) {
       {/* Nav */}
       <nav className="flex ml-6 flex-1">
         {[
-          { href: '/',        label: 'Feed',    key: 'feed' as const },
-          { href: '/signals', label: 'Signals', key: 'signals' as const },
-          { href: '/chart',   label: 'Chart',   key: 'chart' as const },
+          { href: '/',        label: 'Feed',    key: 'feed'    },
+          { href: '/signals', label: 'Signals', key: 'signals' },
+          { href: '/chart',   label: 'Chart',   key: 'chart'   },
         ].map(({ href, label, key }) => (
           <Link
             key={key}
@@ -54,20 +60,23 @@ export default function Topbar({ price: initialPrice, activeTab }: Props) {
         ))}
       </nav>
 
-      {/* Right: price + mode pill */}
+      {/* Right: price + mode badge */}
       <div className="flex items-center gap-2">
-        <span className="font-mono text-[13px]" style={{ color: 'var(--gold)' }}>
-          XAU/USD&nbsp; {formatPrice(price.price)}
-        </span>
-        <span
-          className="font-mono text-[11px]"
-          style={{ color: isUp ? 'var(--bull)' : 'var(--bear)' }}
-        >
-          {isUp ? '▲' : '▼'} {isUp ? '+' : ''}{price.change_pct.toFixed(2)}%
-        </span>
+        {price.price > 0 && (
+          <>
+            <span className="font-mono text-[13px]" style={{ color: 'var(--gold)' }}>
+              XAU/USD&nbsp; {formatPrice(price.price)}
+            </span>
+            <span
+              className="font-mono text-[11px]"
+              style={{ color: isUp ? 'var(--bull)' : 'var(--bear)' }}
+            >
+              {isUp ? '▲' : '▼'} {isUp ? '+' : ''}{price.change_pct.toFixed(2)}%
+            </span>
+          </>
+        )}
 
         {IS_MOCK ? (
-          /* Mock mode badge */
           <div
             className="flex items-center gap-[5px] rounded-[3px] px-2 py-[3px] font-mono text-[11px]"
             style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)', color: '#f59e0b' }}
@@ -76,7 +85,6 @@ export default function Topbar({ price: initialPrice, activeTab }: Props) {
             ◎ MOCK
           </div>
         ) : (
-          /* Live mode badge */
           <div
             className="flex items-center gap-[5px] rounded-[3px] px-2 py-[3px] font-mono text-[11px]"
             style={{ background: 'var(--bullbg)', border: '1px solid var(--bull2)', color: 'var(--bull)' }}
