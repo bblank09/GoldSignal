@@ -1,7 +1,7 @@
 # ◈ GoldSignal — AI-Powered Gold Trading Dashboard
 
 > ระบบ Dashboard วิเคราะห์ทองคำ (XAU/USD) ระดับ Institutional-grade แบบ Real-time  
-> ขับเคลื่อนด้วย Anthropic Claude AI · Next.js 14 · Supabase · Upstash Redis
+> · Next.js 14 · Supabase · Upstash Redis
 
 ---
 
