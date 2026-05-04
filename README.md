@@ -7,11 +7,21 @@
 
 ## ⚡ Quick Start — ดูหน้า UI ได้ทันที (ไม่ต้องมี API key)
 
+**Mac / Linux:**
 ```bash
 git clone https://github.com/bblank09/GoldSignal.git
 cd GoldSignal/goldsignal
 npm install
-cp .env.local.example .env.local   # Mock mode เป็น default — ไม่ต้องแก้ไขอะไร
+cp .env.local.example .env.local
+npm run dev
+```
+
+**Windows (cmd.exe):**
+```cmd
+git clone https://github.com/bblank09/GoldSignal.git
+cd GoldSignal\goldsignal
+npm install
+copy .env.local.example .env.local
 npm run dev
 ```
 
@@ -392,12 +402,35 @@ ANTHROPIC_API_KEY=sk-ant-...
 # GoldAPI (optional — Yahoo Finance ใช้เป็น fallback ถ้าไม่มี)
 GOLDAPI_KEY=goldapi-...
 
-# Cron Security — ตั้งเองได้ (UUID หรือ string ใดก็ได้)
+# Cron Security — ดูวิธีสร้างด้านล่าง
 CRON_SECRET=my-super-secret-cron-key
 
 # App URL (ใช้ตอน deploy จริง)
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
+
+### วิธีสร้าง CRON_SECRET
+
+`CRON_SECRET` คือรหัสลับที่คุณตั้งเองเพื่อป้องกันคนอื่นเรียก Cron endpoints  
+เลือกวิธีสร้างตามระบบที่ใช้:
+
+**Mac / Linux (Terminal):**
+```bash
+openssl rand -hex 32
+# ตัวอย่างผลลัพธ์: a3f8c2e1b4d7901234567890abcdef1234567890abcdef1234567890abcdef12
+```
+
+**Windows (PowerShell):**
+```powershell
+-join ((1..32) | ForEach-Object { '{0:x2}' -f (Get-Random -Max 256) })
+# ตัวอย่างผลลัพธ์: a3f8c2e1b4d790123456789abcdef1234567890abcdef1234567890abcdef12
+```
+
+**วิธีง่ายที่สุด (ทุกระบบ):**  
+ไปที่ https://generate-secret.vercel.app/32 → copy ค่าที่ได้มาใส่ใน `.env.local`
+
+> ค่านี้ตั้งอะไรก็ได้ ขอแค่จำได้และไม่ใช่คำง่ายๆ เช่น `password` หรือ `123456`  
+> ใช้ค่าเดียวกันนี้ตลอด — ทั้งใน `.env.local` และในคำสั่ง curl ด้านล่าง
 
 ---
 
@@ -413,8 +446,19 @@ npm install
 
 ### ขั้นตอนที่ 2 — ตั้งค่า Environment
 
+**Mac / Linux:**
 ```bash
 cp .env.local.example .env.local
+```
+
+**Windows (cmd.exe):**
+```cmd
+copy .env.local.example .env.local
+```
+
+**Windows (PowerShell):**
+```powershell
+Copy-Item .env.local.example .env.local
 ```
 
 > **ค่าเริ่มต้นคือ Mock Mode** — ไฟล์ `.env.local` ที่ copy มามีค่า `DATA_MODE=mock` อยู่แล้ว  
@@ -509,51 +553,90 @@ npm run dev
 
 ### ขั้นตอนที่ 3 — Seed ข้อมูลเริ่มต้น (รัน Cron ด้วยมือ)
 
-เปิด Terminal ใหม่ แล้วรันทีละคำสั่ง (แทนที่ `YOUR_SECRET` ด้วยค่า `CRON_SECRET` ที่ตั้งไว้):
+แทนที่ `YOUR_SECRET` ด้วยค่า `CRON_SECRET` ที่ตั้งไว้ใน `.env.local`  
+เลือกรันตามระบบที่ใช้:
+
+---
+
+#### Mac / Linux (Terminal)
 
 ```bash
 # 1. ดึงราคาทองล่าสุด
-curl -H "Authorization: Bearer YOUR_SECRET" \
-  http://localhost:3000/api/cron/price-tick
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/price-tick
 
 # 2. ดึงข้อมูล Macro (DXY, Yields, VIX ฯลฯ)
-curl -H "Authorization: Bearer YOUR_SECRET" \
-  http://localhost:3000/api/cron/macro-snapshot
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/macro-snapshot
 
 # 3. Seed ปฏิทินเศรษฐกิจ
-curl -H "Authorization: Bearer YOUR_SECRET" \
-  http://localhost:3000/api/cron/calendar-sync
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/calendar-sync
 
 # 4. ดึงข่าว RSS จาก 6 แหล่ง
-curl -H "Authorization: Bearer YOUR_SECRET" \
-  http://localhost:3000/api/cron/fetch-news
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/fetch-news
 
-# 5. ให้ AI วิเคราะห์ข่าว (รอ 30–60 วินาที — Claude กำลังคิด)
-curl -H "Authorization: Bearer YOUR_SECRET" \
-  http://localhost:3000/api/cron/analyze-news
+# 5. ให้ AI วิเคราะห์ข่าว (รอ 30–60 วินาที)
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/analyze-news
 
-# 6. สร้าง Daily Signal (รอ 30–60 วินาที — Claude กำลังสังเคราะห์)
-curl -H "Authorization: Bearer YOUR_SECRET" \
-  http://localhost:3000/api/cron/daily-signal
+# 6. สร้าง Daily Signal (รอ 30–60 วินาที)
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/daily-signal
 ```
 
-> **หมายเหตุ:** ขั้นตอน 4–6 ใช้ Anthropic API ซึ่งมีค่าใช้จ่ายตาม token  
+---
+
+#### Windows — Command Prompt (cmd.exe)
+
+```cmd
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/price-tick
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/macro-snapshot
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/calendar-sync
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/fetch-news
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/analyze-news
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/daily-signal
+```
+
+> `curl` มาพร้อม Windows 10/11 แล้ว ไม่ต้องติดตั้งเพิ่ม
+
+---
+
+#### Windows — PowerShell
+
+```powershell
+$secret = "YOUR_SECRET"
+$base   = "http://localhost:3000/api/cron"
+$headers = @{ Authorization = "Bearer $secret" }
+
+Invoke-RestMethod "$base/price-tick"     -Headers $headers
+Invoke-RestMethod "$base/macro-snapshot" -Headers $headers
+Invoke-RestMethod "$base/calendar-sync"  -Headers $headers
+Invoke-RestMethod "$base/fetch-news"     -Headers $headers
+Invoke-RestMethod "$base/analyze-news"   -Headers $headers   # รอ 30–60 วินาที
+Invoke-RestMethod "$base/daily-signal"   -Headers $headers   # รอ 30–60 วินาที
+```
+
+> แนะนำให้รันทีละบรรทัด อย่ารวดเดียวทั้งหมด — รอดูผลลัพธ์ก่อนไปบรรทัดถัดไป
+
+> **หมายเหตุ:** ขั้นตอน 5–6 ใช้ Anthropic API ซึ่งมีค่าใช้จ่ายตาม token  
 > ดูราคาได้ที่ [anthropic.com/pricing](https://www.anthropic.com/pricing)
+
+---
 
 ### ขั้นตอนที่ 4 — ตรวจสอบว่าข้อมูลเข้า
 
+**Mac / Linux:**
 ```bash
-# ตรวจสอบราคา
 curl http://localhost:3000/api/price
-
-# ตรวจสอบข่าว (ควรมีข้อมูล)
-curl http://localhost:3000/api/news | head -c 500
-
-# ตรวจสอบ Signal วันนี้
+curl http://localhost:3000/api/news
 curl http://localhost:3000/api/signal/daily
 ```
 
-เปิด [http://localhost:3000](http://localhost:3000) — ควรเห็นข้อมูลจริงแล้ว
+**Windows (cmd หรือ PowerShell):**
+```cmd
+curl http://localhost:3000/api/price
+curl http://localhost:3000/api/news
+curl http://localhost:3000/api/signal/daily
+```
+
+เปิด [http://localhost:3000](http://localhost:3000) — ควรเห็นข้อมูลจริงแล้ว  
+Topbar จะไม่แสดง `◎ MOCK` อีกต่อไป
 
 ---
 
@@ -745,16 +828,34 @@ Vercel:
 
 ### ปัญหา: หน้า Signals ขึ้น "Loading signals..."
 
-**สาเหตุ:** ยังไม่มี Daily Signal ในวันนี้  
-**แก้:** รัน `curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/daily-signal`
+**สาเหตุ:** ยังไม่มี Daily Signal ในวันนี้
+
+**Mac/Linux:**
+```bash
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/daily-signal
+```
+**Windows (cmd):**
+```cmd
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/daily-signal
+```
+**Windows (PowerShell):**
+```powershell
+Invoke-RestMethod "http://localhost:3000/api/cron/daily-signal" -Headers @{ Authorization = "Bearer YOUR_SECRET" }
+```
 
 ---
 
 ### ปัญหา: ข่าวในแท็บ Today ว่างเปล่า
 
-**สาเหตุ:** ยังไม่ได้รัน fetch-news และ analyze-news  
-**แก้:**
+**สาเหตุ:** ยังไม่ได้รัน fetch-news และ analyze-news
+
+**Mac/Linux:**
 ```bash
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/fetch-news
+curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/analyze-news
+```
+**Windows (cmd):**
+```cmd
 curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/fetch-news
 curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/analyze-news
 ```
@@ -779,7 +880,28 @@ curl -H "Authorization: Bearer YOUR_SECRET" http://localhost:3000/api/cron/analy
 
 ### ปัญหา: `CRON_SECRET` ไม่ผ่าน (401 Unauthorized)
 
-**แก้:** ตรวจสอบว่า value ใน `.env.local` ตรงกับที่ใส่ใน curl header ทุกตัวอักษร
+**แก้:** ตรวจสอบว่า value ใน `.env.local` ตรงกับที่ใส่ใน curl/PowerShell ทุกตัวอักษร  
+ไม่มีช่องว่าง ไม่มีเครื่องหมาย quote รอบๆ ค่า
+
+---
+
+### ปัญหา: Windows — `'cp' is not recognized`
+
+**สาเหตุ:** cmd.exe ไม่มีคำสั่ง `cp`  
+**แก้:** ใช้ `copy` แทน
+```cmd
+copy .env.local.example .env.local
+```
+
+---
+
+### ปัญหา: Windows — PowerShell แสดง error `Invoke-RestMethod ... SSL`
+
+**สาเหตุ:** localhost ไม่มี SSL certificate  
+**แก้:** เพิ่ม `-SkipCertificateCheck` (PowerShell 7+) หรือใช้ cmd + curl แทน
+```powershell
+Invoke-RestMethod "http://localhost:3000/api/cron/price-tick" -Headers @{ Authorization = "Bearer YOUR_SECRET" } -SkipCertificateCheck
+```
 
 ---
 
