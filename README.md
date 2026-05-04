@@ -10,7 +10,7 @@
 **Mac / Linux:**
 ```bash
 git clone https://github.com/bblank09/GoldSignal.git
-cd GoldSignal/goldsignal
+cd goldsignal
 npm install
 cp .env.local.example .env.local
 npm run dev
@@ -19,7 +19,7 @@ npm run dev
 **Windows (cmd.exe):**
 ```cmd
 git clone https://github.com/bblank09/GoldSignal.git
-cd GoldSignal\goldsignal
+cd goldsignal
 npm install
 copy .env.local.example .env.local
 npm run dev
