@@ -5,6 +5,21 @@
 
 ---
 
+## ⚡ Quick Start — ดูหน้า UI ได้ทันที (ไม่ต้องมี API key)
+
+```bash
+git clone https://github.com/bblank09/GoldSignal.git
+cd GoldSignal/goldsignal
+npm install
+cp .env.local.example .env.local   # Mock mode เป็น default — ไม่ต้องแก้ไขอะไร
+npm run dev
+```
+
+เปิด **http://localhost:3000** — จะเห็น Dashboard พร้อมข้อมูลจำลองทันที  
+หากต้องการเปิดใช้ข้อมูลจริง → ดู [หัวข้อ 10 Live Mode](#10-วิธีใช้งาน--live-mode)
+
+---
+
 ## 📋 สารบัญ
 
 1. [บทนำและที่มา](#1-บทนำและที่มา)
@@ -400,49 +415,89 @@ npm install
 
 ```bash
 cp .env.local.example .env.local
-# เปิดไฟล์ .env.local และกรอก API keys ทุกตัว
 ```
 
-### ขั้นตอนที่ 3 — ตั้งค่า Supabase Database
+> **ค่าเริ่มต้นคือ Mock Mode** — ไฟล์ `.env.local` ที่ copy มามีค่า `DATA_MODE=mock` อยู่แล้ว  
+> ไม่จำเป็นต้องกรอก API key ใดๆ เพื่อรันครั้งแรก
 
-1. เข้า [Supabase Dashboard](https://supabase.com/dashboard) → เลือก Project
-2. ไปที่ **SQL Editor**
-3. Copy ทั้งหมดจากไฟล์ `supabase/schema.sql` แล้ว Paste และ Run
-4. ตรวจสอบว่าสร้างตารางครบ 6 ตาราง: `articles`, `article_analysis`, `price_ticks`, `macro_snapshots`, `daily_signals`, `economic_events`
-
-### ขั้นตอนที่ 4 — รัน Dev Server
+### ขั้นตอนที่ 3 — รัน Dev Server
 
 ```bash
 npm run dev
 ```
 
-เปิด [http://localhost:3000](http://localhost:3000)
+เปิด [http://localhost:3000](http://localhost:3000) — จะเห็น Dashboard พร้อม **ข้อมูลจำลอง** ทันที  
+มี badge `◎ MOCK` แสดงที่ Topbar เพื่อบอกว่ากำลังใช้ Mock Mode
+
+> **ต้องการ Live Mode?** — ดูหัวข้อ 10 สำหรับการตั้งค่า Supabase, Redis, และ API keys ครบ
+
+### ขั้นตอนที่ 4 (เฉพาะ Live Mode) — ตั้งค่า Supabase Database
+
+หากต้องการใช้ข้อมูลจริง:
+1. เข้า [Supabase Dashboard](https://supabase.com/dashboard) → เลือก Project
+2. ไปที่ **SQL Editor**
+3. Copy ทั้งหมดจากไฟล์ `supabase/schema.sql` แล้ว Paste และ Run
+4. ตรวจสอบว่าสร้างตารางครบ 6 ตาราง: `articles`, `article_analysis`, `price_ticks`, `macro_snapshots`, `daily_signals`, `economic_events`
 
 ---
 
 ## 9. วิธีใช้งาน — Mock Mode
 
-Mock mode คือโหมดที่ใช้ **ข้อมูลจำลอง** ที่กำหนดไว้ใน `lib/mock-data.ts` ไม่ต้องการ API keys ใดๆ เหมาะสำหรับการดูหน้าตา UI ก่อนตัดสินใจตั้งค่า
+Mock Mode คือโหมดเริ่มต้น (**default**) — ใช้ **ข้อมูลจำลอง** จาก `lib/mock-data.ts`  
+ไม่ต้องการ API key ใดๆ เหมาะสำหรับการดูหน้าตา UI, พัฒนา feature ใหม่, หรือแชร์ demo
 
-> ⚠️ ปัจจุบัน app ถูกตั้งให้ทำงานแบบ Live เป็นค่าเริ่มต้น  
-> หากต้องการเปลี่ยนกลับ ให้แก้ไขโค้ดใน `app/(dashboard)/layout.tsx`
+### วิธีรัน Mock Mode
 
-**ข้อมูลจำลองที่มีให้:**
-- ราคาทอง: $2,341.50
-- Macro: DXY 104.23, US10Y 4.28%
-- บทความ: 5 บทความพร้อม AI analysis
-- Daily Signal: Bullish strength 4/5
-- Calendar: 6 events (May 14–23)
+```bash
+# ตรวจสอบว่า .env.local มีค่านี้ (ค่าเริ่มต้นที่ copy มาจาก example แล้ว)
+DATA_MODE=mock
+NEXT_PUBLIC_DATA_SOURCE=mock
+```
+
+```bash
+npm run dev
+# → เปิด http://localhost:3000
+# → จะเห็น badge "◎ MOCK" ที่ Topbar แสดงว่ากำลังใช้ Mock Mode
+```
+
+### ข้อมูลจำลองที่มีให้
+
+| ข้อมูล | ค่า |
+|---|---|
+| ราคาทอง | $2,341.50 (มี SSE simulation — ราคาขยับสุ่มทุก 10 วินาที) |
+| Macro | DXY 104.23, US10Y 4.28%, VIX 18.50, SPX 4,850 |
+| บทความข่าว | 5 บทความพร้อม AI analysis ครบทุก field |
+| Daily Signal | Bullish, strength 4/5, Buy/Sell zones พร้อม Stop Loss |
+| Economic Calendar | 6 events (May 14–23) |
+| Forecasts | Mock institutional forecasts จาก 5 สถาบัน |
+
+> Mock Mode ดูสมจริง — SSE ราคา simulate การเคลื่อนไหว, Filter/Tab ทุกอย่างทำงานได้  
+> ข้อมูลเดียวกันทุกครั้งที่เปิด (ไม่ใช่ข้อมูลตลาดจริง)
 
 ---
 
 ## 10. วิธีใช้งาน — Live Mode
 
-### ขั้นตอนที่ 1 — ตั้งค่า .env.local
+Live Mode ดึงข้อมูลจริงจาก Yahoo Finance, Supabase, Redis และวิเคราะห์ด้วย Claude AI  
+ต้องการ API keys และการตั้งค่าเพิ่มเติมก่อนใช้งาน
 
-ตรวจสอบว่ากรอก API Keys ครบทุกตัวแล้ว (ดูหัวข้อ 7)
+### ขั้นตอนที่ 1 — เปิดใช้ Live Mode ใน .env.local
+
+แก้ไขไฟล์ `.env.local` — เปลี่ยนจาก `mock` เป็น `live` และกรอก API keys ทุกตัว:
 
 ```bash
+# เปลี่ยน mock → live
+DATA_MODE=live
+NEXT_PUBLIC_DATA_SOURCE=live
+
+# กรอก keys ทุกตัวจากหัวข้อ 7
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJh...
+SUPABASE_SERVICE_ROLE_KEY=eyJh...
+UPSTASH_REDIS_REST_URL=https://xxxx.upstash.io
+UPSTASH_REDIS_REST_TOKEN=AX...
+ANTHROPIC_API_KEY=sk-ant-...
+CRON_SECRET=your-secret-key
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
@@ -522,8 +577,19 @@ git push origin main
 ไปที่ **Settings → Environment Variables** แล้วเพิ่มทุกตัวจาก `.env.local`:
 
 ```
-NEXT_PUBLIC_APP_URL=https://your-app.vercel.app   ← เปลี่ยนเป็น URL จริง
+DATA_MODE=live                                      ← ต้องตั้งเป็น live บน Vercel
+NEXT_PUBLIC_DATA_SOURCE=live
+NEXT_PUBLIC_APP_URL=https://your-app.vercel.app    ← เปลี่ยนเป็น URL จริง
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+UPSTASH_REDIS_REST_URL=...
+UPSTASH_REDIS_REST_TOKEN=...
+ANTHROPIC_API_KEY=...
+CRON_SECRET=...
 ```
+
+> ⚠️ หากไม่ตั้ง `DATA_MODE=live` บน Vercel — production จะแสดงเฉพาะ mock data
 
 ### ขั้นตอนที่ 4 — Deploy
 

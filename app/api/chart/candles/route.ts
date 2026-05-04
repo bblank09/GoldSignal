@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { redis } from '@/lib/redis'
-import type { Candle } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
+
+import { isMockMode } from '@/lib/mock-mode'
+import { mockCandles } from '@/lib/mock-data'
+import { redis } from '@/lib/redis'
+import type { Candle } from '@/lib/types'
 
 interface YahooQuote {
   open:   (number | null)[]
@@ -22,9 +25,9 @@ interface YahooResponse {
 }
 
 const INTERVAL_CONFIG: Record<string, { yahooInterval: string; range: string }> = {
-  '1d':  { yahooInterval: '1d',  range: '6mo'  },
-  '60m': { yahooInterval: '60m', range: '5d'   },
-  '15m': { yahooInterval: '15m', range: '1d'   },
+  '1d':  { yahooInterval: '1d',  range: '6mo' },
+  '60m': { yahooInterval: '60m', range: '5d'  },
+  '15m': { yahooInterval: '15m', range: '1d'  },
 }
 
 async function fetchYahooCandles(yahooInterval: string, range: string): Promise<Candle[]> {
@@ -49,13 +52,11 @@ async function fetchYahooCandles(yahooInterval: string, range: string): Promise<
     const l = quote.low[i]
     const c = quote.close[i]
     const v = quote.volume[i]
-    // Skip bars with null OHLC
     if (o === null || h === null || l === null || c === null) continue
     const time = new Date(timestamp[i] * 1000).toISOString().split('T')[0]
     candles.push({ time, open: o, high: h, low: l, close: c, volume: v ?? 0 })
   }
 
-  // Sort ascending and deduplicate by time (keep last)
   const deduped = new Map<string, Candle>()
   for (const c of candles) deduped.set(c.time, c)
   return Array.from(deduped.values()).sort((a, b) => a.time.localeCompare(b.time))
@@ -66,9 +67,17 @@ export async function GET(req: NextRequest) {
   const interval = searchParams.get('interval') ?? '1d'
   const cfg = INTERVAL_CONFIG[interval] ?? INTERVAL_CONFIG['1d']
 
+  // ── Mock mode (default) ──────────────────────────────────────────────────────
+  if (isMockMode()) {
+    // Return full set for 1d; slice for intraday to simulate shorter windows
+    if (interval === '15m') return NextResponse.json(mockCandles.slice(-48))
+    if (interval === '60m') return NextResponse.json(mockCandles.slice(-120))
+    return NextResponse.json(mockCandles)
+  }
+
+  // ── Live mode ────────────────────────────────────────────────────────────────
   const cacheKey = `gs:chart:candles:${interval}`
 
-  // Try Redis cache first
   try {
     const cached = await redis.get<string>(cacheKey)
     if (cached) {
@@ -77,10 +86,8 @@ export async function GET(req: NextRequest) {
     }
   } catch { /* ignore Redis errors */ }
 
-  // Fetch fresh from Yahoo Finance
   const candles = await fetchYahooCandles(cfg.yahooInterval, cfg.range)
 
-  // Cache for 300s
   try {
     await redis.set(cacheKey, JSON.stringify(candles), { ex: 300 })
   } catch { /* ignore */ }

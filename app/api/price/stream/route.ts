@@ -1,22 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+export const dynamic = 'force-dynamic'
+
+import { isMockMode } from '@/lib/mock-mode'
+import { mockGoldPrice } from '@/lib/mock-data'
 import { redis, PRICE_KEY, PRICE_TTL } from '@/lib/redis'
 import { fetchGoldPrice } from '@/lib/services/price'
 import type { GoldPrice } from '@/lib/types'
 
-export const dynamic = 'force-dynamic'
-
 export async function GET(req: NextRequest) {
   const encoder = new TextEncoder()
 
+  // ── Mock mode (default): simulate live price movement ─────────────────────
+  if (isMockMode()) {
+    let base = mockGoldPrice.price
+    let cancelled = false
+
+    const stream = new ReadableStream({
+      start(controller) {
+        const send = (data: GoldPrice) => {
+          if (cancelled) return
+          try { controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`)) }
+          catch { cancelled = true }
+        }
+
+        // Send immediately then every 5s with tiny random walk
+        const tick = () => {
+          if (cancelled) return
+          const delta = (Math.random() - 0.48) * 2.5      // small drift ±$2.5
+          base = Math.round((base + delta) * 100) / 100
+          const change = Math.round((base - mockGoldPrice.price) * 100) / 100
+          send({
+            ...mockGoldPrice,
+            price: base,
+            change,
+            change_pct: Math.round((change / mockGoldPrice.price) * 10000) / 100,
+            ts: new Date().toISOString(),
+          })
+        }
+
+        tick()
+        const interval = setInterval(tick, 5_000)
+        const timeout  = setTimeout(() => { cancelled = true; clearInterval(interval); try { controller.close() } catch {} }, 5 * 60 * 1000)
+
+        req.signal.addEventListener('abort', () => {
+          cancelled = true
+          clearInterval(interval)
+          clearTimeout(timeout)
+          try { controller.close() } catch {}
+        })
+      },
+    })
+
+    return new NextResponse(stream, {
+      headers: {
+        'Content-Type':  'text/event-stream',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection':    'keep-alive',
+      },
+    })
+  }
+
+  // ── Live mode ─────────────────────────────────────────────────────────────
   const stream = new ReadableStream({
     async start(controller) {
       let closed = false
 
       const send = (data: GoldPrice) => {
         if (closed) return
-        try {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
-        } catch { closed = true }
+        try { controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`)) }
+        catch { closed = true }
       }
 
       const cleanup = () => {
@@ -24,7 +77,7 @@ export async function GET(req: NextRequest) {
         closed = true
         clearInterval(interval)
         clearTimeout(timeout)
-        try { controller.close() } catch { /* already closed */ }
+        try { controller.close() } catch {}
       }
 
       const poll = async () => {
@@ -36,23 +89,18 @@ export async function GET(req: NextRequest) {
             send(price)
             return
           }
-        } catch { /* redis unavailable — fall through to live fetch */ }
+        } catch { /* redis unavailable */ }
 
         try {
           const price = await fetchGoldPrice()
           send(price)
-          // Cache so cron tick and other consumers benefit
           await redis.set(PRICE_KEY, JSON.stringify(price), { ex: PRICE_TTL }).catch(() => {})
-        } catch { /* network error — skip this tick */ }
+        } catch { /* skip tick */ }
       }
 
       await poll()
       const interval = setInterval(poll, 10_000)
-
-      // Auto-close after 5 minutes to prevent zombie connections
-      const timeout = setTimeout(cleanup, 5 * 60 * 1000)
-
-      // Abort when client disconnects
+      const timeout  = setTimeout(cleanup, 5 * 60 * 1000)
       req.signal.addEventListener('abort', cleanup)
     },
   })

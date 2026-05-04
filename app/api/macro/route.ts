@@ -1,12 +1,21 @@
 import { NextResponse } from 'next/server'
+
+export const dynamic = 'force-dynamic'
+
+import { isMockMode } from '@/lib/mock-mode'
+import { mockMacro } from '@/lib/mock-data'
 import { redis, MACRO_KEY, MACRO_TTL } from '@/lib/redis'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchMacroSnapshot } from '@/lib/services/macro'
 import type { MacroSnapshot } from '@/lib/types'
 
-export const dynamic = 'force-dynamic'
-
 export async function GET() {
+  // ── Mock mode (default) ──────────────────────────────────────────────────────
+  if (isMockMode()) {
+    return NextResponse.json({ ...mockMacro, ts: new Date().toISOString() })
+  }
+
+  // ── Live mode ────────────────────────────────────────────────────────────────
   // 1. Try Redis cache
   try {
     const cached = await redis.get<string>(MACRO_KEY)
@@ -28,7 +37,6 @@ export async function GET() {
 
     if (data?.snapshot) {
       const macro = data.snapshot as MacroSnapshot
-      // Backfill Redis so next request is cached
       await redis.set(MACRO_KEY, JSON.stringify(macro), { ex: MACRO_TTL }).catch(() => {})
       return NextResponse.json(macro)
     }
@@ -37,7 +45,6 @@ export async function GET() {
   // 3. Live fetch from Yahoo Finance (fallback — no cron needed)
   try {
     const macro = await fetchMacroSnapshot()
-    // Cache so subsequent requests are fast
     await redis.set(MACRO_KEY, JSON.stringify(macro), { ex: MACRO_TTL }).catch(() => {})
     return NextResponse.json(macro)
   } catch (err) {

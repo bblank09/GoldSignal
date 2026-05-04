@@ -1,11 +1,23 @@
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
+
+import { isMockMode } from '@/lib/mock-mode'
+import { mockGoldPrice } from '@/lib/mock-data'
 import { redis, PRICE_KEY, PRICE_TTL } from '@/lib/redis'
 import { fetchGoldPrice } from '@/lib/services/price'
 import type { GoldPrice } from '@/lib/types'
 
 export async function GET() {
+  // ── Mock mode (default) ──────────────────────────────────────────────────────
+  if (isMockMode()) {
+    return NextResponse.json({
+      ...mockGoldPrice,
+      ts: new Date().toISOString(),
+    })
+  }
+
+  // ── Live mode ────────────────────────────────────────────────────────────────
   // Try Redis first
   try {
     const cached = await redis.get<string>(PRICE_KEY)
@@ -18,7 +30,6 @@ export async function GET() {
   // No cache — fetch live directly
   try {
     const price = await fetchGoldPrice()
-    // Cache for other consumers
     await redis.set(PRICE_KEY, JSON.stringify(price), { ex: PRICE_TTL }).catch(() => {})
     return NextResponse.json(price)
   } catch (err) {

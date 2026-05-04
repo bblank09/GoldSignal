@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
+
+import { isMockMode } from '@/lib/mock-mode'
+import { mockArticlesWithAnalysis } from '@/lib/mock-data'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { ArticleWithAnalysis } from '@/lib/types'
 
@@ -9,6 +12,14 @@ export async function GET(req: NextRequest) {
   const category = searchParams.get('category')
   const limit    = Math.min(Number(searchParams.get('limit') ?? '50'), 100)
 
+  // ── Mock mode (default) ──────────────────────────────────────────────────────
+  if (isMockMode()) {
+    let articles = mockArticlesWithAnalysis
+    if (category) articles = articles.filter((a) => a.category_id === category)
+    return NextResponse.json(articles.slice(0, limit))
+  }
+
+  // ── Live mode ────────────────────────────────────────────────────────────────
   const db = createAdminClient()
   let query = db
     .from('articles')
@@ -16,9 +27,7 @@ export async function GET(req: NextRequest) {
     .order('published_at', { ascending: false })
     .limit(limit)
 
-  if (category) {
-    query = query.eq('category_id', category)
-  }
+  if (category) query = query.eq('category_id', category)
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

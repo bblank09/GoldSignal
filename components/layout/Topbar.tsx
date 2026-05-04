@@ -5,6 +5,8 @@ import type { GoldPrice } from '@/lib/types'
 import { formatPrice } from '@/lib/format'
 import { usePriceStream } from '@/lib/hooks/use-price-stream'
 
+const IS_MOCK = (process.env.NEXT_PUBLIC_DATA_SOURCE ?? 'mock') !== 'live'
+
 interface Props {
   price: GoldPrice
   activeTab: 'feed' | 'signals' | 'chart'
@@ -52,7 +54,7 @@ export default function Topbar({ price: initialPrice, activeTab }: Props) {
         ))}
       </nav>
 
-      {/* Right: price + live pill */}
+      {/* Right: price + mode pill */}
       <div className="flex items-center gap-2">
         <span className="font-mono text-[13px]" style={{ color: 'var(--gold)' }}>
           XAU/USD&nbsp; {formatPrice(price.price)}
@@ -63,13 +65,26 @@ export default function Topbar({ price: initialPrice, activeTab }: Props) {
         >
           {isUp ? '▲' : '▼'} {isUp ? '+' : ''}{price.change_pct.toFixed(2)}%
         </span>
-        <div
-          className="flex items-center gap-[5px] rounded-[3px] px-2 py-[3px] font-mono text-[11px]"
-          style={{ background: 'var(--bullbg)', border: '1px solid var(--bull2)', color: 'var(--bull)' }}
-        >
-          <div className="w-[5px] h-[5px] rounded-full animate-pulse2" style={{ background: 'var(--bull)' }} />
-          LIVE
-        </div>
+
+        {IS_MOCK ? (
+          /* Mock mode badge */
+          <div
+            className="flex items-center gap-[5px] rounded-[3px] px-2 py-[3px] font-mono text-[11px]"
+            style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)', color: '#f59e0b' }}
+            title="Running with mock data. Set DATA_MODE=live in .env.local to use real APIs."
+          >
+            ◎ MOCK
+          </div>
+        ) : (
+          /* Live mode badge */
+          <div
+            className="flex items-center gap-[5px] rounded-[3px] px-2 py-[3px] font-mono text-[11px]"
+            style={{ background: 'var(--bullbg)', border: '1px solid var(--bull2)', color: 'var(--bull)' }}
+          >
+            <div className="w-[5px] h-[5px] rounded-full animate-pulse2" style={{ background: 'var(--bull)' }} />
+            LIVE
+          </div>
+        )}
       </div>
     </div>
   )

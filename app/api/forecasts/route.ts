@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
+
+import { isMockMode } from '@/lib/mock-mode'
+import { mockForecasts } from '@/lib/mock-data'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { anthropic, MODEL, MAX_TOKENS, withRetry } from '@/lib/anthropic'
 import { buildForecastsPrompt } from '@/lib/prompts/forecasts'
@@ -20,9 +23,14 @@ interface Forecast {
 }
 
 export async function GET() {
+  // ── Mock mode (default) ──────────────────────────────────────────────────────
+  if (isMockMode()) {
+    return NextResponse.json(mockForecasts)
+  }
+
+  // ── Live mode ────────────────────────────────────────────────────────────────
   const db = createAdminClient()
 
-  // Get current price
   let currentPrice = 4600
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/api/price`)
@@ -32,7 +40,6 @@ export async function GET() {
     }
   } catch { /* use default */ }
 
-  // Get macro data
   let macro: MacroSnapshot | null = null
   const { data: macroRow } = await db
     .from('macro_snapshots')
@@ -42,7 +49,6 @@ export async function GET() {
     .single()
   if (macroRow?.payload) macro = macroRow.payload as MacroSnapshot
 
-  // Get recent articles
   const { data: articles } = await db
     .from('articles')
     .select('*, article_analysis(*)')
